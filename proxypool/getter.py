@@ -110,6 +110,49 @@ class FreeProxyGetter(object, metaclass=ProxyMetaclass):
                 result = adress + ':' + port
                 yield result.replace(' ', '')
 
+    # 以下 三个函数 来自 https://github.com/Python3WebSpider/ProxyPool/blob/master/proxypool/crawler.py
+    def crawl_iphai(self):
+        start_url = 'http://www.iphai.com/'
+        html = get_page(start_url)
+        if html:
+            find_tr = re.compile('<tr>(.*?)</tr>', re.S)
+            trs = find_tr.findall(html)
+            for s in range(1, len(trs)):
+                find_ip = re.compile('<td>\s+(\d+\.\d+\.\d+\.\d+)\s+</td>', re.S)
+                re_ip_address = find_ip.findall(trs[s])
+                find_port = re.compile('<td>\s+(\d+)\s+</td>', re.S)
+                re_port = find_port.findall(trs[s])
+                for address,port in zip(re_ip_address, re_port):
+                    address_port = address+':'+port
+                    yield address_port.replace(' ','')
+
+    def crawl_ip3366_1(self):
+        for i in range(1, 4):
+            start_url = 'http://www.ip3366.net/?stype=1&page={}'.format(i)
+            html = get_page(start_url)
+            if html:
+                find_tr = re.compile('<tr>(.*?)</tr>', re.S)
+                trs = find_tr.findall(html)
+                for s in range(1, len(trs)):
+                    find_ip = re.compile('<td>(\d+\.\d+\.\d+\.\d+)</td>')
+                    re_ip_address = find_ip.findall(trs[s])
+                    find_port = re.compile('<td>(\d+)</td>')
+                    re_port = find_port.findall(trs[s])
+                    for address,port in zip(re_ip_address, re_port):
+                        address_port = address+':'+port
+                        yield address_port.replace(' ','')
+
+    def crawl_ip3366_2(self):
+        for page in range(1, 4):
+            start_url = 'http://www.ip3366.net/free/?stype=1&page={}'.format(page)
+            html = get_page(start_url)
+            ip_address = re.compile('<tr>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
+            # \s * 匹配空格，起到换行作用
+            re_ip_address = ip_address.findall(html)
+            for address, port in re_ip_address:
+                result = address+':'+ port
+                yield result.replace(' ', '')
+
     #网站被墙 # TODO 添加代理访问
     # def crawl_premproxy(self):
     #     for i in ['China-01', 'China-02', 'China-03', 'China-04', 'Taiwan-01']:
