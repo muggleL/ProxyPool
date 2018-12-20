@@ -5,7 +5,7 @@ def main():
 
     s = Schedule()
     s.run()
-    app.run()
+    app.run(host='0.0.0.0')
 
 
 
