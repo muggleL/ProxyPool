@@ -1,7 +1,8 @@
 from .utils import get_page
 from pyquery import PyQuery as pq
 import re
-
+from .setting import cookies, user_agent
+from time import sleep
 
 class ProxyMetaclass(type):
     """
@@ -30,15 +31,16 @@ class FreeProxyGetter(object, metaclass=ProxyMetaclass):
             proxies.append(proxy)
         return proxies
 
-    def crawl_ip181(self):
-        start_url = 'http://www.ip181.com/'
-        html = get_page(start_url)
-        ip_adress = re.compile('<tr.*?>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
-        # \s* 匹配空格，起到换行作用
-        re_ip_adress = ip_adress.findall(str(html))
-        for adress, port in re_ip_adress:
-            result = adress + ':' + port
-            yield result.replace(' ', '')
+    #网站已挂 403
+    # def crawl_ip181(self):
+    #     start_url = 'http://www.ip181.com/'
+    #     html = get_page(start_url)
+    #     ip_adress = re.compile('<tr.*?>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
+    #     # \s* 匹配空格，起到换行作用
+    #     re_ip_adress = ip_adress.findall(str(html))
+    #     for adress, port in re_ip_adress:
+    #         result = adress + ':' + port
+    #         yield result.replace(' ', '')
 
     def crawl_kuaidaili(self):
         for page in range(1, 4):
@@ -52,26 +54,28 @@ class FreeProxyGetter(object, metaclass=ProxyMetaclass):
             for adress, port in re_ip_adress:
                 result = adress + ':' + port
                 yield result.replace(' ', '')
+            sleep(1) #如果过快则 501
 
-    def crawl_xicidaili(self):
-        for page in range(1, 4):
-            start_url = 'http://www.xicidaili.com/wt/{}'.format(page)
-            html = get_page(start_url)
-            ip_adress = re.compile(
-                '<td class="country"><img src="http://fs.xicidaili.com/images/flag/cn.png" alt="Cn" /></td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>'
-            )
-            # \s* 匹配空格，起到换行作用
-            re_ip_adress = ip_adress.findall(str(html))
-            for adress, port in re_ip_adress:
-                result = adress + ':' + port
-                yield result.replace(' ', '')
+    # 网站已挂 访问 503 错误
+    # def crawl_xicidaili(self):
+    #     for page in range(1, 4):
+    #         start_url = 'http://www.xicidaili.com/wt/{}'.format(page)
+    #         html = get_page(start_url)
+    #         ip_adress = re.compile(
+    #             '<td class="country"><img src="http://fs.xicidaili.com/images/flag/cn.png" alt="Cn" /></td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>'
+    #         )
+    #         # \s* 匹配空格，起到换行作用
+    #         re_ip_adress = ip_adress.findall(str(html))
+    #         for adress, port in re_ip_adress:
+    #             result = adress + ':' + port
+    #             yield result.replace(' ', '')
 
     def crawl_daili66(self, page_count=4):
         start_url = 'http://www.66ip.cn/{}.html'
         urls = [start_url.format(page) for page in range(1, page_count + 1)]
         for url in urls:
             print('Crawling', url)
-            html = get_page(url)
+            html = get_page(url, agent=user_agent, options=cookies)
             if html:
                 doc = pq(html)
                 trs = doc('.containerbox table tr:gt(0)').items()
@@ -93,9 +97,11 @@ class FreeProxyGetter(object, metaclass=ProxyMetaclass):
                 result = adress + ':' + port
                 yield result.replace(' ', '')
 
+    # 网站链接改变为 http://ip.kxdaili.com/dailiip.html
     def crawl_kxdaili(self):
         for i in range(1, 4):
-            start_url = 'http://www.kxdaili.com/ipList/{}.html#ip'.format(i)
+            # start_url = 'http://www.kxdaili.com/ipList/{}.html#ip'.format(i)
+            start_url = 'http://ip.kxdaili.com/ipList/{}.html#ip'.format(i)
             html = get_page(start_url)
             ip_adress = re.compile('<tr.*?>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
             # \s* 匹配空格，起到换行作用
@@ -104,29 +110,31 @@ class FreeProxyGetter(object, metaclass=ProxyMetaclass):
                 result = adress + ':' + port
                 yield result.replace(' ', '')
 
-    def crawl_premproxy(self):
-        for i in ['China-01', 'China-02', 'China-03', 'China-04', 'Taiwan-01']:
-            start_url = 'https://premproxy.com/proxy-by-country/{}.htm'.format(
-                i)
-            html = get_page(start_url)
-            if html:
-                ip_adress = re.compile('<td data-label="IP:port ">(.*?)</td>')
-                re_ip_adress = ip_adress.findall(str(html))
-                for adress_port in re_ip_adress:
-                    yield adress_port.replace(' ', '')
+    #网站被墙 # TODO 添加代理访问
+    # def crawl_premproxy(self):
+    #     for i in ['China-01', 'China-02', 'China-03', 'China-04', 'Taiwan-01']:
+    #         start_url = 'https://premproxy.com/proxy-by-country/{}.htm'.format(
+    #             i)
+    #         html = get_page(start_url)
+    #         if html:
+    #             ip_adress = re.compile('<td data-label="IP:port ">(.*?)</td>')
+    #             re_ip_adress = ip_adress.findall(str(html))
+    #             for adress_port in re_ip_adress:
+    #                 yield adress_port.replace(' ', '')
 
-    def crawl_xroxy(self):
-        for i in ['CN', 'TW']:
-            start_url = 'http://www.xroxy.com/proxylist.php?country={}'.format(
-                i)
-            html = get_page(start_url)
-            if html:
-                ip_adress1 = re.compile(
-                    "title='View this Proxy details'>\s*(.*).*")
-                re_ip_adress1 = ip_adress1.findall(str(html))
-                ip_adress2 = re.compile(
-                    "title='Select proxies with port number .*'>(.*)</a>")
-                re_ip_adress2 = ip_adress2.findall(html)
-                for adress, port in zip(re_ip_adress1, re_ip_adress2):
-                    adress_port = adress + ':' + port
-                    yield adress_port.replace(' ', '')
+    #网站被墙 # TODO 添加代理访问
+    # def crawl_xroxy(self):
+    #     for i in ['CN', 'TW']:
+    #         start_url = 'http://www.xroxy.com/proxylist.php?country={}'.format(
+    #             i)
+    #         html = get_page(start_url)
+    #         if html:
+    #             ip_adress1 = re.compile(
+    #                 "title='View this Proxy details'>\s*(.*).*")
+    #             re_ip_adress1 = ip_adress1.findall(str(html))
+    #             ip_adress2 = re.compile(
+    #                 "title='Select proxies with port number .*'>(.*)</a>")
+    #             re_ip_adress2 = ip_adress2.findall(html)
+    #             for adress, port in zip(re_ip_adress1, re_ip_adress2):
+    #                 adress_port = adress + ':' + port
+    #                 yield adress_port.replace(' ', '')

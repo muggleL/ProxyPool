@@ -5,13 +5,15 @@ from requests.exceptions import ConnectionError
 from fake_useragent import UserAgent,FakeUserAgentError
 import random
 
-def get_page(url, options={}):
+def get_page(url, agent='', options={}):
     try:
         ua = UserAgent()
     except FakeUserAgentError:
         pass
+    if not agent:
+        agent = ua.random
     base_headers = {
-        'User-Agent':  ua.random,
+        'User-Agent':  agent,
         'Accept-Encoding': 'gzip, deflate, sdch',
         'Accept-Language': 'zh-CN,zh;q=0.8'
     }
